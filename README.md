@@ -1,6 +1,6 @@
 # Kaito Helper
 
-KaitoHelper is a simple chrome extension to add functionality to Kaito.
+KaitoHelper is a simple chrome extension to add functionality to Kaito. Join me in Yapping by following [this link](https://yaps.kaito.ai/referral/125083073).
 
 The first function it provides is a single-click open-in-new-tab X button for each identified X profile on a page.
 

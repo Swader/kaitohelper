@@ -1,3 +1,4 @@
+/* X button styles (for Kaito site) */
 .kaito-helper-x-button {
   display: inline-flex;
   align-items: center;
@@ -15,6 +16,30 @@
 
 .kaito-helper-x-button:hover {
   background-color: rgba(29, 161, 242, 0.1);
+}
+
+/* Yap score styles (for X.com) */
+.kaito-helper-yap-score {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 4px;
+  padding: 0 6px;
+  height: 16px;
+  border-radius: 4px;
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #10B981;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+/* Ensure our styles don't break X's layout */
+div[data-testid="User-Name"] {
+  display: flex !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  gap: 4px !important;
 }
 
 .kaito-helper-cell {

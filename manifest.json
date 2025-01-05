@@ -3,10 +3,23 @@
   "name": "Kaito Helper",
   "version": "1.0",
   "description": "Adds functionality to Kaito",
-  "permissions": ["activeTab"],
+  "permissions": [
+    "activeTab",
+    "storage",
+    "alarms"
+  ],
+  "host_permissions": [
+    "https://*.kaito.ai/*",
+    "https://*.x.com/*",
+    "https://*.twitter.com/*"
+  ],
   "content_scripts": [
     {
-      "matches": ["https://yaps.kaito.ai/*"],
+      "matches": [
+        "https://yaps.kaito.ai/*",
+        "https://x.com/*",
+        "https://twitter.com/*"
+      ],
       "js": ["content.js"],
       "css": ["styles.css"]
     }
@@ -16,5 +29,9 @@
     "32": "icons/icon32.png",
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
   }
 } 

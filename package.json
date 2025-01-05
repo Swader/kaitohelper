@@ -1,0 +1,17 @@
+{
+  "name": "kaito-extension",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "clean": "rm -rf dist",
+    "build:background": "esbuild background.js --bundle --outfile=dist/background.js --platform=browser --format=iife",
+    "build:content": "esbuild content.js --bundle --outfile=dist/content.js --platform=browser --format=iife",
+    "build": "npm run clean && npm run build:background && npm run build:content && cp manifest.json styles.css dist/ && cp -r icons dist/"
+  },
+  "dependencies": {
+    "ethers": "^6.13.4"
+  },
+  "devDependencies": {
+    "esbuild": "^0.19.11"
+  }
+} 

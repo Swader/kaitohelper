@@ -1,3 +1,69 @@
+// Cache for yap scores to avoid repeated lookups
+let yapScoresCache = null;
+
+async function getYapScores() {
+  try {
+    const response = await chrome.runtime.sendMessage({ type: 'getYapScores' });
+    if (response.success) {
+      yapScoresCache = response.data.attestations;
+      return yapScoresCache;
+    }
+    console.error('Failed to get yap scores:', response.error);
+    return [];
+  } catch (error) {
+    console.error('Error fetching yap scores:', error);
+    return [];
+  }
+}
+
+function findYapScore(username) {
+  if (!yapScoresCache) return null;
+  const attestation = yapScoresCache.find(a => a.twitterUsername.toLowerCase() === username.toLowerCase());
+  return attestation ? attestation.yapPoints : null;
+}
+
+// Function to add yap score to a tweet
+function addYapScoreToTweet(tweetElement) {
+  // Find the username element - this selector might need adjustment based on X's current DOM structure
+  const usernameElement = tweetElement.querySelector('div[data-testid="User-Name"] a:last-child');
+  if (!usernameElement) return;
+
+  // Extract username from the href
+  const username = usernameElement.href.split('/').pop();
+  if (!username) return;
+
+  // Check if we already added a yap score to this tweet
+  if (tweetElement.querySelector('.kaito-helper-yap-score')) return;
+
+  // Find yap score
+  const yapScore = findYapScore(username);
+  if (!yapScore) return;
+
+  // Create and add the yap score element
+  const scoreSpan = document.createElement('span');
+  scoreSpan.className = 'kaito-helper-yap-score';
+  scoreSpan.textContent = `${yapScore} YAP`;
+  
+  // Insert after the username
+  const userInfoContainer = usernameElement.closest('div[data-testid="User-Name"]');
+  if (userInfoContainer) {
+    userInfoContainer.appendChild(scoreSpan);
+  }
+}
+
+// Function to handle X.com
+async function handleXContent() {
+  // Fetch yap scores if not cached
+  if (!yapScoresCache) {
+    await getYapScores();
+  }
+
+  // Find all tweets in the timeline
+  const tweets = document.querySelectorAll('article[data-testid="tweet"]');
+  tweets.forEach(addYapScoreToTweet);
+}
+
+// Function to create X button (for kaito site)
 function createXButton(username) {
   console.log(`Creating X button for username: ${username}`);
   const button = document.createElement('a');
@@ -22,6 +88,7 @@ function createXButton(username) {
   return button;
 }
 
+// Function to handle Kaito site
 function addXButtonsToTable() {
   console.log('Running addXButtonsToTable');
   const tableRows = document.querySelectorAll('tbody tr');
@@ -32,17 +99,13 @@ function addXButtonsToTable() {
     const nameCell = row.querySelector('td:nth-child(2)');
     if (nameCell) {
       console.log('Found name cell:', nameCell.innerHTML);
-      // Look for the username span - now using a more specific selector
       const usernameSpan = nameCell.querySelector('span.text-white\\/40 span:last-child');
       if (usernameSpan) {
         const username = usernameSpan.textContent;
         console.log(`Found username: ${username}`);
         
-        // Check if button already exists
         if (!nameCell.querySelector('.kaito-helper-x-button')) {
           const button = createXButton(username);
-          
-          // Insert button right after the flex container that has the username
           const flexContainer = nameCell.querySelector('.flex');
           if (flexContainer) {
             flexContainer.style.display = 'flex';
@@ -52,33 +115,40 @@ function addXButtonsToTable() {
             console.log('Added button next to username');
           }
         }
-      } else {
-        console.log('No username element found in this cell');
       }
-    } else {
-      console.log('No name cell found in this row');
     }
   });
 }
 
-// Wait for DOM to be fully loaded
-console.log('Content script loaded');
-document.addEventListener('DOMContentLoaded', () => {
-  console.log('DOM Content Loaded');
+// Initialize based on current site
+const isXSite = window.location.hostname === 'x.com' || window.location.hostname === 'twitter.com';
+
+if (isXSite) {
+  console.log('On X.com, setting up yap score display');
+  handleXContent();
+  
+  // Set up observer for dynamic content on X
+  const observer = new MutationObserver((mutations) => {
+    handleXContent();
+  });
+  
+  observer.observe(document.body, { 
+    childList: true, 
+    subtree: true 
+  });
+} else {
+  console.log('On Kaito site, setting up X buttons');
+  // Handle Kaito site initialization
+  document.addEventListener('DOMContentLoaded', addXButtonsToTable);
   addXButtonsToTable();
-});
-
-// Also try running on immediate load in case DOMContentLoaded already fired
-addXButtonsToTable();
-
-// Set up observer for dynamic content
-console.log('Setting up MutationObserver');
-const observer = new MutationObserver((mutations) => {
-  console.log('Mutation observed:', mutations);
-  addXButtonsToTable();
-});
-
-observer.observe(document.body, { 
-  childList: true, 
-  subtree: true 
-}); 
+  
+  // Set up observer for Kaito site
+  const observer = new MutationObserver((mutations) => {
+    addXButtonsToTable();
+  });
+  
+  observer.observe(document.body, { 
+    childList: true, 
+    subtree: true 
+  });
+} 

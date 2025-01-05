@@ -32,6 +32,15 @@
   font-weight: 500;
   line-height: 1;
   vertical-align: middle;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.kaito-helper-yap-score:hover {
+  background-color: rgba(16, 185, 129, 0.2);
+  color: #059669;
+  text-decoration: none;
 }
 
 /* Ensure our styles don't break X's layout */

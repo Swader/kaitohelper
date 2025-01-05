@@ -39,15 +39,22 @@ function addYapScoreToTweet(tweetElement) {
   const yapScore = findYapScore(username);
   if (!yapScore) return;
 
-  // Create and add the yap score element
-  const scoreSpan = document.createElement('span');
-  scoreSpan.className = 'kaito-helper-yap-score';
-  scoreSpan.textContent = `${yapScore} YAP`;
+  // Create and add the yap score element as a link
+  const scoreLink = document.createElement('a');
+  scoreLink.className = 'kaito-helper-yap-score';
+  scoreLink.href = 'https://yaps.kaito.ai/referral/125083073';
+  scoreLink.target = '_blank';
+  scoreLink.textContent = `${yapScore} YAP`;
+  
+  // Add click handler to prevent event bubbling
+  scoreLink.addEventListener('click', (e) => {
+    e.stopPropagation();
+  });
   
   // Insert after the username
   const userInfoContainer = usernameElement.closest('div[data-testid="User-Name"]');
   if (userInfoContainer) {
-    userInfoContainer.appendChild(scoreSpan);
+    userInfoContainer.appendChild(scoreLink);
   }
 }
 

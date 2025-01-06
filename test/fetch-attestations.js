@@ -1,4 +1,5 @@
 import fetch from 'node-fetch';
+import { writeFile } from 'fs/promises';
 
 const EAS_SCHEMA_UID = '0xcb66276cf243e78fad68dd5e633f7bb56814b49ac9a91256615340591577a0e8';
 const GRAPHQL_ENDPOINT = 'https://base.easscan.org/graphql';
@@ -54,9 +55,9 @@ async function fetchAttestations() {
           return {
             uid: attestation.id,
             timestamp: attestation.time,
-            twitterUserId: BigInt(decodedData[0].value.value.hex).toString(), // Convert BigNumber to string
+            twitterUserId: BigInt(decodedData[0].value.value.hex).toString(),
             twitterUsername: decodedData[1].value.value,
-            yapPoints: BigInt(decodedData[2].value.value.hex).toString() // Convert BigNumber to string
+            yapPoints: BigInt(decodedData[2].value.value.hex).toString()
           };
         });
 
@@ -66,21 +67,37 @@ async function fetchAttestations() {
       }
     }
 
-    // Cache the results
+    // Create the full data cache
     const cacheData = {
       timestamp: Date.now(),
       attestations: allAttestations
     };
 
-    console.log('\nSample attestation:', allAttestations[0]);
+    // Create optimized version
+    const optimizedData = allAttestations.map(({ twitterUsername, yapPoints }) => [
+      twitterUsername,
+      yapPoints
+    ]);
+
+    console.log('\nSample attestation (full):', allAttestations[0]);
+    console.log('Sample attestation (optimized):', optimizedData[0]);
     console.log('Total attestations:', allAttestations.length);
     
-    // Save to file for inspection
-    const fs = await import('fs');
-    await fs.promises.writeFile('attestations.json', JSON.stringify(cacheData, null, 2));
-    console.log('\nData saved to attestations.json');
+    // Save both versions
+    await writeFile('attestations.json', JSON.stringify(cacheData, null, 2));
+    await writeFile('attestations_optimized.json', JSON.stringify({
+      t: Date.now(),
+      a: optimizedData
+    }));
+
+    const fullSize = JSON.stringify(cacheData).length;
+    const optimizedSize = JSON.stringify({t: Date.now(), a: optimizedData}).length;
+    const savings = ((fullSize - optimizedSize) / fullSize * 100).toFixed(2);
     
-    return cacheData;
+    console.log('\nData saved to attestations.json and attestations_optimized.json');
+    console.log(`Size comparison: ${(fullSize/1024).toFixed(2)}KB vs ${(optimizedSize/1024).toFixed(2)}KB (${savings}% smaller)`);
+    
+    return { cacheData, optimizedData };
 
   } catch (error) {
     console.error('Error fetching attestations:', error);
